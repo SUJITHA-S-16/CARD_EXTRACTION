@@ -7,6 +7,10 @@ import cv2
 import numpy as np
 import pandas as pd
 from streamlit_option_menu import option_menu
+import streamlit_lottie
+from streamlit_lottie import st_lottie
+import json
+import requests
 from mysql.connector import Error
 
 # SQL CONNECTION
@@ -32,6 +36,19 @@ my_cursor.execute(
 
 reader = easyocr.Reader(['en'])
 
+
+# LOTTIE CREATION
+
+def load_lottieurl(url):
+
+    r = requests.get(url)
+    if r.status_code != 200:
+        return None
+    return r.json()
+
+
+lottie_coding = load_lottieurl("https://lottie.host/dbb7f138-041e-4f1b-b2ca-cc3997cf5a5c/X948Jq1JFY.json")
+
 # STREAMLIT PAGE CONFIGURATION
 
 st.set_page_config(page_title="BUSINESS CARD EXTRACTION ",
@@ -47,9 +64,9 @@ with st.sidebar:
                          default_index=0,
                          orientation="vertical",
                          styles={"nav-link": {"font-size": "25px", "text-align": "left", "margin": "10px",
-                                              "--hover-color": "red"},
+                                              "--hover-color": "grey"},
                                  "container": {"max-width": "3000px"},
-                                 "nav-link-selected": {"background-color": "red"}})
+                                 "nav-link-selected": {"background-color": "grey"}})
 
 
 # STREAMLIT BACKGROUND
@@ -74,11 +91,21 @@ if choice == 'Home':
     with st.container():
         st.title(":white[Extracting Business Card Data with OCR]")
     with st.container():
-        st.write(""":white[Project]:This Streamlit application that allows users to upload
+        st.header(""":white[Overview]""")
+    with st.container():
+        st.write("""This Streamlit application that allows users to upload
         an image of a business card and extract relevant information from it using easyOCR.
         The extracted information would include the company name, card holder name,
         designation, mobile number, email address, website URL, area, city, state, and pincode.
         The extracted information would then be displayed in the application's graphical user interface (GUI).""")
+    with st.container():
+        st.write("---")
+        left_column, right_column = st.columns(2)
+        with left_column:
+            st.header(":white[Technologies Used]")
+            st.write("Python , MySQL ,OCR , Streamlit")
+        with right_column:
+            st_lottie(lottie_coding, height=300, key="coding")
 
 
 # ADD PAGE
@@ -109,15 +136,17 @@ if choice == 'Add':
 # VIEW PAGE
 
 elif choice == 'View':
+    st.title("View the details in the database")
     my_cursor.execute("SELECT * FROM ocr")
     result = my_cursor.fetchall()
     df = pd.DataFrame(result, columns=['id', 'name', 'job_title', 'address', 'postcode', 'phone', 'email', 'website',
                                        'company_name'])
-    st.write(df)
+    st.dataframe(df)
 
 # UPDATE PAGE
 
 elif choice == 'Update':
+    st.title("Update the required field")
     my_cursor.execute("SELECT id, name FROM ocr")
     result = my_cursor.fetchall()
     business_cards = {}
@@ -162,6 +191,7 @@ elif choice == 'Update':
 # DELETE PAGE
 
 elif choice == 'Delete':
+    st.title("Delete the record")
     my_cursor.execute("SELECT id, name FROM ocr")
     result = my_cursor.fetchall()
     business_cards = {}
